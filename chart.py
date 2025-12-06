@@ -6,8 +6,7 @@ import numpy as np
 # --- 1. Seaborn Best Practices: Set Professional Style and Context ---
 # Use 'whitegrid' for a clean, professional background
 sns.set_style("whitegrid")
-# Use 'poster' or 'talk' context for presentation-ready text sizes
-# 'talk' is a good balance for executive reports
+# Use 'talk' context for presentation-ready text sizes for executive reports
 sns.set_context("talk") 
 
 # --- 2. Data Generation: Create realistic synthetic data ---
@@ -17,15 +16,13 @@ metrics = [
     'Avg_Time_Spent_min',
     'Purchase_Frequency',
     'AOV_USD', # Average Order Value
-    'CSAT_Score', # Customer Satisfaction Score
+    'CSAT_Score', # Customer Satisfaction Score (1-5 scale)
     'Support_Tickets'
 ]
 
 # Generate synthetic data with realistic interdependencies
-# We use a multivariate normal distribution to ensure realistic correlations
 # Define a desired correlation matrix (realistic expectations for retail)
 # High positive correlation: Visits & Time, Visits & Purchase Frequency
-# Moderate positive correlation: Purchase Freq & AOV, CSAT & Purchase Freq
 # Negative correlation: Support Tickets with CSAT and Purchase Freq
 desired_corr = np.array([
     [1.0, 0.70, 0.65, 0.40, 0.20, -0.30],
@@ -37,7 +34,6 @@ desired_corr = np.array([
 ])
 
 # Use the desired correlation matrix to generate a covariance matrix
-# Assuming standard deviations (std devs) for data columns
 stds = np.array([4, 10, 1.5, 50, 0.8, 2])
 cov = np.outer(stds, stds) * desired_corr
 
@@ -49,10 +45,8 @@ data = np.random.multivariate_normal(
     size=500
 )
 
-# Convert to DataFrame
+# Convert to DataFrame and clip/round values to ensure they are realistic
 df = pd.DataFrame(data, columns=metrics)
-
-# Clip values to ensure they are realistic (e.g., no negative counts)
 df['Monthly_Visits'] = df['Monthly_Visits'].clip(lower=0).round().astype(int)
 df['Purchase_Frequency'] = df['Purchase_Frequency'].clip(lower=0.1)
 df['AOV_USD'] = df['AOV_USD'].clip(lower=20)
@@ -64,8 +58,7 @@ corr_matrix = df.corr()
 
 # --- 3. Create Heatmap Visualization ---
 
-# Set figure size for the required 512x512 output
-# To get 512x512 pixels with dpi=64, we need a figure size of 512/64 = 8
+# Set figure size for the required 512x512 output (8 inches * 64 dpi = 512 pixels)
 plt.figure(figsize=(8, 8)) 
 
 # Create the heatmap
@@ -93,15 +86,15 @@ plt.title(
 plt.yticks(rotation=0)
 plt.xticks(rotation=45, ha='right')
 
-# Adjust layout to prevent labels from being cut off
-plt.tight_layout()
+# Adjust layout to prevent labels/colorbar from being cut off. 
+plt.tight_layout() 
 
 # --- 5. Export: Save as PNG with required dimensions ---
-# 512x512 output requires (8, 8) figsize and dpi=64: 8 inches * 64 dpi = 512 pixels
+# We rely solely on the (8, 8) figsize and dpi=64 after calling plt.tight_layout().
+# Removing bbox_inches='tight' and pad_inches=0 often resolves exact sizing issues.
 plt.savefig(
     'chart.png', 
-    dpi=64, 
-    bbox_inches='tight' # Ensures no borders/labels are cut off
+    dpi=64
 )
 
 print("Heatmap successfully generated and saved as 'chart.png' with 512x512 dimensions.")
